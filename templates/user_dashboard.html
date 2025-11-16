@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">
+    <i class="bi bi-speedometer2"></i> Dashboard của {{ current_user.username }}
+</h2>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="bi bi-book-half"></i> Đang mượn
+                </h5>
+                <h2>{{ borrows|selectattr('status', 'equalto', 'borrowed')|list|length }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="bi bi-check-circle"></i> Đã trả
+                </h5>
+                <h2>{{ borrows|selectattr('status', 'equalto', 'returned')|list|length }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h3 class="mb-3">Lịch sử mượn sách</h3>
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead class="table-light">
+            <tr>
+                <th>Tên sách</th>
+                <th>Ngày mượn</th>
+                <th>Hạn trả</th>
+                <th>Ngày trả</th>
+                <th>Trạng thái</th>
+                <th>Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for borrow in borrows %}
+            <tr>
+                <td>
+                    <strong>{{ borrow.book.title }}</strong><br>
+                    <small class="text-muted">{{ borrow.book.author }}</small>
+                </td>
+                <td>{{ borrow.borrow_date.strftime('%d/%m/%Y') }}</td>
+                <td>
+                    {{ borrow.due_date.strftime('%d/%m/%Y') }}
+                    {% if borrow.status == 'borrowed' and borrow.due_date < now %}
+                    <span class="badge bg-danger">Quá hạn</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if borrow.return_date %}
+                    {{ borrow.return_date.strftime('%d/%m/%Y') }}
+                    {% else %}
+                    -
+                    {% endif %}
+                </td>
+                <td>
+                    {% if borrow.status == 'borrowed' %}
+                    <span class="badge bg-warning">Đang mượn</span>
+                    {% else %}
+                    <span class="badge bg-success">Đã trả</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if borrow.status == 'borrowed' %}
+                    <form method="POST" action="{{ url_for('return_book', borrow_id=borrow.id) }}">
+                        <button type="submit" class="btn btn-sm btn-success">
+                            <i class="bi bi-check-circle"></i> Trả sách
+                        </button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" class="text-center text-muted">
+                    Bạn chưa mượn sách nào. <a href="{{ url_for('books') }}">Khám phá ngay</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Set current datetime for comparison
+    const now = new Date();
+</script>
+{% endblock %}

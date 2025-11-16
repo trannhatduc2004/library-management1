@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Danh sách sách{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-book"></i> Danh sách sách</h2>
+    {% if current_user.is_authenticated and current_user.is_admin %}
+    <a href="{{ url_for('add_book') }}" class="btn btn-success">
+        <i class="bi bi-plus-circle"></i> Thêm sách mới
+    </a>
+    {% endif %}
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <form method="GET" class="input-group">
+            <input type="text" name="search" class="form-control" placeholder="Tìm kiếm theo tên sách hoặc tác giả..." value="{{ request.args.get('search', '') }}">
+            <button class="btn btn-primary" type="submit">
+                <i class="bi bi-search"></i> Tìm kiếm
+            </button>
+        </form>
+    </div>
+    <div class="col-md-4">
+        <select class="form-select" onchange="window.location.href='?category=' + this.value">
+            <option value="">Tất cả thể loại</option>
+            {% for cat in categories %}
+            <option value="{{ cat }}" {% if request.args.get('category') == cat %}selected{% endif %}>
+                {{ cat }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+</div>
+
+<div class="row">
+    {% for book in books %}
+    <div class="col-md-4 col-lg-3 mb-4">
+        <div class="card book-card h-100">
+            <div class="card-body">
+                <h5 class="card-title">{{ book.title }}</h5>
+                <p class="card-text">
+                    <small class="text-muted">
+                        <i class="bi bi-person"></i> {{ book.author }}<br>
+                        <i class="bi bi-tag"></i> {{ book.category or 'Chưa phân loại' }}<br>
+                        <i class="bi bi-bookshelf"></i> Còn: 
+                        <span class="{% if book.available_copies == 0 %}text-danger{% elif book.available_copies < 3 %}text-warning{% else %}text-success{% endif %}">
+                            {{ book.available_copies }}/{{ book.total_copies }}
+                        </span>
+                    </small>
+                </p>
+            </div>
+            <div class="card-footer bg-transparent">
+                <div class="btn-group w-100" role="group">
+                    {% if current_user.is_authenticated %}
+                        {% if book.available_copies > 0 %}
+                        <form method="POST" action="{{ url_for('borrow_book', book_id=book.id) }}" class="flex-fill">
+                            <button type="submit" class="btn btn-success btn-sm w-100">
+                                <i class="bi bi-book"></i> Mượn
+                            </button>
+                        </form>
+                        {% else %}
+                        <button class="btn btn-secondary btn-sm flex-fill" disabled>Hết sách</button>
+                        {% endif %}
+                        
+                        {% if current_user.is_admin %}
+                        <a href="{{ url_for('edit_book', book_id=book.id) }}" class="btn btn-warning btn-sm">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <form method="POST" action="{{ url_for('delete_book', book_id=book.id) }}" 
+                              onsubmit="return confirm('Bạn có chắc muốn xóa sách này?')">
+                            <button type="submit" class="btn btn-danger btn-sm">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                    {% else %}
+                    <a href="{{ url_for('login') }}" class="btn btn-primary btn-sm w-100">
+                        Đăng nhập để mượn
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> Không tìm thấy sách nào.
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

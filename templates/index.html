@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="jumbotron bg-light p-5 rounded-3 mb-4">
+    <h1 class="display-4">Chào mừng đến Thư Viện Trực Tuyến</h1>
+    <p class="lead">Hệ thống quản lý mượn trả sách hiện đại và dễ sử dụng</p>
+    <hr class="my-4">
+    <p>Khám phá hàng ngàn đầu sách phong phú từ nhiều thể loại khác nhau</p>
+    <a class="btn btn-primary btn-lg" href="{{ url_for('books') }}" role="button">
+        <i class="bi bi-search"></i> Tìm kiếm sách
+    </a>
+</div>
+
+<h2 class="mb-4">Sách mới nhất</h2>
+<div class="row">
+    {% for book in books[:8] %}
+    <div class="col-md-3 mb-4">
+        <div class="card book-card h-100">
+            <div class="card-body">
+                <h5 class="card-title">{{ book.title }}</h5>
+                <p class="card-text">
+                    <small class="text-muted">
+                        <i class="bi bi-person"></i> {{ book.author }}<br>
+                        <i class="bi bi-tag"></i> {{ book.category or 'Chưa phân loại' }}<br>
+                        <i class="bi bi-bookshelf"></i> Còn: {{ book.available_copies }}/{{ book.total_copies }}
+                    </small>
+                </p>
+            </div>
+            <div class="card-footer bg-transparent">
+                {% if current_user.is_authenticated and book.available_copies > 0 %}
+                <form method="POST" action="{{ url_for('borrow_book', book_id=book.id) }}">
+                    <button type="submit" class="btn btn-sm btn-success w-100">
+                        <i class="bi bi-book"></i> Mượn sách
+                    </button>
+                </form>
+                {% elif book.available_copies == 0 %}
+                <button class="btn btn-sm btn-secondary w-100" disabled>Hết sách</button>
+                {% else %}
+                <a href="{{ url_for('login') }}" class="btn btn-sm btn-primary w-100">Đăng nhập để mượn</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-4 text-center">
+        <i class="bi bi-collection display-1 text-primary"></i>
+        <h3>Nhiều đầu sách</h3>
+        <p>Kho sách đa dạng với nhiều thể loại</p>
+    </div>
+    <div class="col-md-4 text-center">
+        <i class="bi bi-search display-1 text-primary"></i>
+        <h3>Tìm kiếm dễ dàng</h3>
+        <p>Tìm sách nhanh chóng theo tên, tác giả</p>
+    </div>
+    <div class="col-md-4 text-center">
+        <i class="bi bi-clock-history display-1 text-primary"></i>
+        <h3>Quản lý mượn trả</h3>
+        <p>Theo dõi lịch sử mượn trả thuận tiện</p>
+    </div>
+</div>
+{% endblock %}
