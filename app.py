@@ -282,7 +282,44 @@ def init_db():
     db.session.commit()
     print('Database initialized!')
 
-if __name__ == '__main__':
+def init_database():
+    """Initialize database with tables and sample data"""
     with app.app_context():
-        db.create_all()
+        try:
+            # Create all tables
+            db.create_all()
+            print('✅ Tables created')
+            
+            # Create admin user if not exists
+            if not User.query.filter_by(username='admin').first():
+                admin = User(
+                    username='admin',
+                    password=generate_password_hash('admin123'),
+                    is_admin=True
+                )
+                db.session.add(admin)
+                db.session.commit()
+                print('✅ Admin user created')
+            
+            # Create sample books if not exists
+            if Book.query.count() == 0:
+                books = [
+                    Book(title='Đắc Nhân Tâm', author='Dale Carnegie', category='Kỹ năng sống', total_copies=5, available_copies=5),
+                    Book(title='Sapiens', author='Yuval Noah Harari', category='Lịch sử', total_copies=3, available_copies=3),
+                    Book(title='Nhà Giả Kim', author='Paulo Coelho', category='Văn học', total_copies=4, available_copies=4),
+                    Book(title='Tuổi Trẻ Đáng Giá Bao Nhiêu', author='Rosie Nguyễn', category='Kỹ năng sống', total_copies=3, available_copies=3),
+                ]
+                db.session.add_all(books)
+                db.session.commit()
+                print('✅ Sample books added')
+                
+            print('✅ Database initialization complete!')
+        except Exception as e:
+            print(f'⚠️ Database initialization error: {e}')
+            # Don't raise error, app can still start
+
+# Initialize database on import (production)
+init_database()
+
+if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
